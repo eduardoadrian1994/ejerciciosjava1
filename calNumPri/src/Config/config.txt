@@ -1,0 +1,144 @@
+Aquí tienes un paso a paso para generar el código que verifica si un rango de números es primo utilizando múltiples hilos:
+
+1. **Importa las clases necesarias**: Comienza por importar las clases necesarias para utilizar un pool de hilos y una lista.
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+```
+
+2. **Define la clase principal**: Define la clase principal `CalculoDeNumerosPrimos` y el método principal `main`. En el método principal, crea una lista para almacenar los resultados y un pool de hilos con 5 hilos. Luego, crea y ejecuta 5 tareas para verificar si los números en el rango son primos utilizando el método `execute` del pool de hilos. Finalmente, apaga el pool de hilos utilizando el método `shutdown` y espera a que todas las tareas se completen utilizando el método `awaitTermination`. Luego, imprime los resultados.
+
+```java
+public class CalculoDeNumerosPrimos {
+    public static void main(String[] args) {
+        // Creamos una lista para almacenar los resultados
+        List<Integer> numerosPrimos = new ArrayList<>();
+        // Creamos un pool de hilos con 5 hilos
+        ExecutorService executor = Executors.newFixedThreadPool(5);
+        // Creamos y ejecutamos 5 tareas para verificar si los números en el rango son primos
+        for (int i = 0; i < 5; i++) {
+            executor.execute(new TareaVerificarPrimalidad(numerosPrimos, i * 10, (i + 1) * 10));
+        }
+        // Apagamos el pool de hilos y esperamos a que todas las tareas se completen
+        executor.shutdown();
+        try {
+            executor.awaitTermination(1, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        // Imprimimos los resultados
+        System.out.println("Números primos en el rango: " + numerosPrimos);
+    }
+}
+```
+
+3. **Define la clase TareaVerificarPrimalidad**: Define la clase `TareaVerificarPrimalidad` que implementa la interfaz `Runnable`. Esta clase tiene una referencia a la lista de resultados y dos variables para almacenar el inicio y el fin del rango que debe verificar.
+
+```java
+class TareaVerificarPrimalidad implements Runnable {
+    private List<Integer> numerosPrimos;
+    private int inicio;
+    private int fin;
+
+    public TareaVerificarPrimalidad(List<Integer> numerosPrimos, int inicio, int fin) {
+        this.numerosPrimos = numerosPrimos;
+        this.inicio = inicio;
+        this.fin = fin;
+    }
+}
+```
+
+4. **Define el método run**: Define el método `run` en la clase `TareaVerificarPrimalidad`. Este método utiliza un bucle `for` para verificar si cada número en el rango es primo utilizando el método privado `esPrimo`. Si un número es primo, se agrega a la lista de resultados utilizando una sección sincronizada para evitar condiciones de carrera.
+
+```java
+class TareaVerificarPrimalidad implements Runnable {
+    // ...
+
+    @Override
+    public void run() {
+        for (int i = inicio; i < fin; i++) {
+            if (esPrimo(i)) {
+                synchronized (numerosPrimos) {
+                    numerosPrimos.add(i);
+                }
+            }
+        }
+    }
+}
+```
+
+5. **Define el método esPrimo**: Define el método privado `esPrimo` en la clase `TareaVerificarPrimalidad`. Este método verifica si un número es primo o no. Si el número es menor o igual a 1, devuelve `false`. De lo contrario, utiliza un bucle `for` para verificar si el número es divisible por algún número entre 2 y la raíz cuadrada del número. Si encuentra un divisor, devuelve `false`. Si no encuentra ningún divisor, devuelve `true`.
+
+```java
+class TareaVerificarPrimalidad implements Runnable {
+    // ...
+
+    private boolean esPrimo(int n) {
+        if (n <= 1) return false;
+        for (int i = 2; i <= Math.sqrt(n); i++) {
+            if (n % i == 0) return false;
+        }
+        return true;
+    }
+}
+```
+
+Este es el código completo que verifica si un rango de números es primo utilizando múltiples hilos.
+
+En Java, una sección sincronizada es un bloque de código que solo puede ser ejecutado por un hilo a la vez. Esto se logra utilizando la palabra clave `synchronized` seguida de un objeto que actúa como un monitor. Cuando un hilo entra en una sección sincronizada, adquiere el monitor del objeto especificado y lo bloquea. Si otro hilo intenta entrar en una sección sincronizada que utiliza el mismo monitor, debe esperar hasta que el primer hilo libere el monitor al salir de la sección sincronizada.
+
+Las secciones sincronizadas son útiles para evitar condiciones de carrera en aplicaciones concurrentes. Una condición de carrera ocurre cuando el comportamiento de un programa depende del orden en que los hilos ejecutan sus operaciones. Por ejemplo, si dos hilos intentan actualizar el mismo valor al mismo tiempo sin utilizar sincronización, pueden generar una condición de carrera y producir resultados incorrectos.
+
+En el ejemplo anterior, utilizamos una sección sincronizada para agregar números primos a la lista de resultados de forma segura. Cuando un hilo encuentra un número primo, entra en una sección sincronizada utilizando la lista de resultados como monitor. Dentro de la sección sincronizada, el hilo agrega el número primo a la lista y luego sale de la sección sincronizada, liberando el monitor. Si otro hilo encuentra un número primo al mismo tiempo, debe esperar hasta que el primer hilo libere el monitor antes de poder entrar en la sección sincronizada y agregar su número primo a la lista.
+
+
+La tarea para verificar la primalidad en el ejemplo anterior se implementa mediante la clase `TareaVerificarPrimalidad`. Esta clase implementa la interfaz `Runnable` para poder ejecutarse en un hilo separado. La clase tiene tres variables de instancia: una referencia a la lista de resultados, una variable para almacenar el inicio del rango que debe verificar y una variable para almacenar el fin del rango que debe verificar.
+
+La clase `TareaVerificarPrimalidad` tiene un constructor que recibe como argumentos una referencia a la lista de resultados y el inicio y el fin del rango que debe verificar. Estos valores se asignan a las variables de instancia correspondientes.
+
+La clase también tiene un método `run` que se ejecuta cuando se inicia el hilo. Este método utiliza un bucle `for` para verificar si cada número en el rango es primo utilizando el método privado `esPrimo`. Si un número es primo, se agrega a la lista de resultados utilizando una sección sincronizada para evitar condiciones de carrera.
+
+El método privado `esPrimo` verifica si un número es primo o no. Si el número es menor o igual a 1, devuelve `false`. De lo contrario, utiliza un bucle `for` para verificar si el número es divisible por algún número entre 2 y la raíz cuadrada del número. Si encuentra un divisor, devuelve `false`. Si no encuentra ningún divisor, devuelve `true`.
+
+Aquí tienes el código de la clase `TareaVerificarPrimalidad`:
+
+```java
+class TareaVerificarPrimalidad implements Runnable {
+    private List<Integer> numerosPrimos;
+    private int inicio;
+    private int fin;
+
+    public TareaVerificarPrimalidad(List<Integer> numerosPrimos, int inicio, int fin) {
+        this.numerosPrimos = numerosPrimos;
+        this.inicio = inicio;
+        this.fin = fin;
+    }
+
+    @Override
+    public void run() {
+        for (int i = inicio; i < fin; i++) {
+            if (esPrimo(i)) {
+                synchronized (numerosPrimos) {
+                    numerosPrimos.add(i);
+                }
+            }
+        }
+    }
+
+    private boolean esPrimo(int n) {
+        if (n <= 1) return false;
+        for (int i = 2; i <= Math.sqrt(n); i++) {
+            if (n % i == 0) return false;
+        }
+        return true;
+    }
+}
+```
+
+
+
+
